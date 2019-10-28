@@ -1,6 +1,7 @@
 package guru.springframework.services;
 
 import guru.springframework.domain.Product;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class ProductServiceImpl implements ProductService {
     private Map<Integer,Product> products;
 
@@ -18,6 +20,11 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> listAllProducts() {
         return new ArrayList<>(products.values());
+    }
+
+    @Override
+    public Product getProductById(Integer id) {
+        return products.get(id);
     }
 
     private void loadProducts(){

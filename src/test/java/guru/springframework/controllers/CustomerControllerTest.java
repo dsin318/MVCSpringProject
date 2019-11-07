@@ -9,58 +9,55 @@ import org.mockito.*;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 /**
- * Created by jt on 11/16/15.
+ * Created by jt on 11/17/15.
  */
 public class CustomerControllerTest {
 
-    @Mock //Mockito Mock object
+    @Mock
     private CustomerService customerService;
 
-    @InjectMocks //setups up controller, and injects mock objects into it.
+    @InjectMocks
     private CustomerController customerController;
 
     private MockMvc mockMvc;
 
     @Before
     public void setup(){
-        MockitoAnnotations.initMocks(this); //initilizes controller and mocks
+        MockitoAnnotations.initMocks(this);
 
         mockMvc = MockMvcBuilders.standaloneSetup(customerController).build();
     }
 
     @Test
     public void testList() throws Exception{
-
-        List<Customer> customers = new ArrayList<Customer>();
+        List<Customer> customers = new ArrayList<>();
         customers.add(new Customer());
         customers.add(new Customer());
 
-        //specific Mockito interaction, tell stub to return list of customers
-        when(customerService.listAll()).thenReturn((List) customers); //need to strip generics to keep Mockito happy.
+        when(customerService.listAll()).thenReturn((List) customers);
 
         mockMvc.perform(get("/customer/list"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("customer/list"))
                 .andExpect(model().attribute("customers", hasSize(2)));
-
     }
 
     @Test
-    public void testShow() throws Exception{
+    public void testShow() throws Exception {
         Integer id = 1;
 
-        //Tell Mockito stub to return new product for ID 1
         when(customerService.getById(id)).thenReturn(new Customer());
 
         mockMvc.perform(get("/customer/show/1"))
@@ -70,29 +67,25 @@ public class CustomerControllerTest {
     }
 
     @Test
-    public void testEdit() throws Exception{
+    public void testEdit() throws Exception {
         Integer id = 1;
 
-        //Tell Mockito stub to return new product for ID 1
         when(customerService.getById(id)).thenReturn(new Customer());
 
-        mockMvc.perform(get("/product/edit/1"))
+        mockMvc.perform(get("/customer/edit/1"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("product/productform"))
-                .andExpect(model().attribute("product", instanceOf(Customer.class)));
+                .andExpect(view().name("customer/customerform"))
+                .andExpect(model().attribute("customer", instanceOf(Customer.class)));
     }
 
     @Test
     public void testNewCustomer() throws Exception {
-        Integer id = 1;
-
-        //should not call service
         verifyZeroInteractions(customerService);
 
-        mockMvc.perform(get("/product/new"))
+        mockMvc.perform(get("/customer/new"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("product/productform"))
-                .andExpect(model().attribute("product", instanceOf(Customer.class)));
+                .andExpect(view().name("customer/customerform"))
+                .andExpect(model().attribute("customer", instanceOf(Customer.class)));
     }
 
     @Test
@@ -127,11 +120,11 @@ public class CustomerControllerTest {
                 .param("id", "1")
                 .param("firstName", firstName)
                 .param("lastName", lastName)
-                .param("addressLine1", addressLine1)
-                .param("addressLine2", addressLine2)
-                .param("city", city)
-                .param("state", state)
-                .param("zipCode", zipCode)
+                .param("shippingAddress.addressLine1", addressLine1)
+                .param("shippingAddress.addressLine2", addressLine2)
+                .param("shippingAddress.city", city)
+                .param("shippingAddress.state", state)
+                .param("shippingAddress.zipCode", zipCode)
                 .param("email", email)
                 .param("phoneNumber", phoneNumber))
                 .andExpect(status().is3xxRedirection())
@@ -139,11 +132,11 @@ public class CustomerControllerTest {
                 .andExpect(model().attribute("customer", instanceOf(Customer.class)))
                 .andExpect(model().attribute("customer", hasProperty("firstName", is(firstName))))
                 .andExpect(model().attribute("customer", hasProperty("lastName", is(lastName))))
-                .andExpect(model().attribute("customer", hasProperty("addressLine1", is(addressLine1))))
-                .andExpect(model().attribute("customer", hasProperty("addressLine2", is(addressLine2))))
-                .andExpect(model().attribute("customer", hasProperty("city", is(city))))
-                .andExpect(model().attribute("customer", hasProperty("state", is(state))))
-                .andExpect(model().attribute("customer", hasProperty("zipCode", is(zipCode))))
+                .andExpect(model().attribute("customer", hasProperty("shippingAddress", hasProperty("addressLine1", is(addressLine1)))))
+                .andExpect(model().attribute("customer", hasProperty("shippingAddress", hasProperty("addressLine2", is(addressLine2)))))
+                .andExpect(model().attribute("customer", hasProperty("shippingAddress", hasProperty("city", is(city)))))
+                .andExpect(model().attribute("customer", hasProperty("shippingAddress", hasProperty("state", is(state)))))
+                .andExpect(model().attribute("customer", hasProperty("shippingAddress", hasProperty("zipCode", is(zipCode)))))
                 .andExpect(model().attribute("customer", hasProperty("email", is(email))))
                 .andExpect(model().attribute("customer", hasProperty("phoneNumber", is(phoneNumber))));
 
@@ -155,23 +148,14 @@ public class CustomerControllerTest {
         assertEquals(id, boundCustomer.getId());
         assertEquals(firstName, boundCustomer.getFirstName());
         assertEquals(lastName, boundCustomer.getLastName());
-        assertEquals(addressLine1, boundCustomer.getBillingAddress().getAddressLine1());
-        assertEquals(addressLine2, boundCustomer.getBillingAddress().getAddressLine2());
-        assertEquals(city, boundCustomer.getBillingAddress().getCity());
-        assertEquals(state, boundCustomer.getBillingAddress().getState());
-        assertEquals(zipCode, boundCustomer.getBillingAddress().getZipCode());
+        assertEquals(addressLine1, boundCustomer.getShippingAddress().getAddressLine1());
+        assertEquals(addressLine2, boundCustomer.getShippingAddress().getAddressLine2());
+        assertEquals(city, boundCustomer.getShippingAddress().getCity());
+        assertEquals(state, boundCustomer.getShippingAddress().getState());
+        assertEquals(zipCode, boundCustomer.getShippingAddress().getZipCode());
         assertEquals(email, boundCustomer.getEmail());
         assertEquals(phoneNumber, boundCustomer.getPhoneNumber());
-    }
 
-    @Test
-    public void testDelete() throws Exception{
-        Integer id = 1;
 
-        mockMvc.perform(get("/customer/delete/1"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/customer/list"));
-
-        verify(customerService, times(1)).delete(id);
     }
 }

@@ -15,11 +15,23 @@ public class CartDetail implements DomainObject {
     @Version
     private Integer version;
 
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    private Integer quantity;
+
     @ManyToOne
     private Cart cart;
 
     @OneToOne
     private Product product;
+
+
 
     @Override
     public Integer getId() {
